@@ -1,0 +1,93 @@
+package des;
+import java.util.Scanner;
+import javax.swing.JOptionPane;
+import java.lang.Math;
+import java.io.*;
+import java.util.*;
+import java.net.URL;
+import java.awt.image.BufferedImage;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.AlgorithmParameters;
+import java.security.spec.KeySpec;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESKeySpec;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+
+
+public class DecryptFile extends EncryptFile {
+
+	public DecryptFile() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	public static void main(String[] args) throws Exception
+	{
+		String password = "MrStudent100!";
+		FileInputStream inSalt = new FileInputStream("salt.enc");
+		byte[] salt = new byte[8];
+		inSalt.read(salt);
+		inSalt.close();
+		FileInputStream ivIn = new FileInputStream("iv.enc");
+		int sixteen = 16;
+		//Wrapper class for the integer 'sixteen'
+		Integer z = new Integer(sixteen); //Boxing
+		//Integer z = sixteen;
+		int s = z; // Unboxing
+		byte[] iv = new byte[z]; 
+		ivIn.read(iv);
+		ivIn.close();
+		// Wrapper class for secure hashing algorithm "PBKDF2WithHmacSHA1" - - representing this name as a string
+		String instance_SKF = new String("PBKDF2WithHmacSHA1");
+		String i_SKF = instance_SKF;
+		SecretKeyFactory factory = SecretKeyFactory.getInstance(i_SKF);
+		KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, 65536,256);
+		SecretKey sKey1 = factory.generateSecret(keySpec);
+		SecretKey sKey2 = new SecretKeySpec(sKey1.getEncoded(), "AES");
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.DECRYPT_MODE, sKey2, new IvParameterSpec(iv));
+		// Wrapper class for encrypted file (inEncrypt) directory "C:\\Users\\attor\\OneDrive\\Documents\\encrypted.txt" 
+		// - - representing this directory as a string
+		String eFileWrapper = new String("C:\\\\Users\\\\attor\\\\OneDrive\\\\Documents\\\\encrypted.txt"); // Boxing
+		String encryptFileName = eFileWrapper; // Unboxing
+		FileInputStream inEncrypt = new FileInputStream(encryptFileName);
+		// Wrapper class for Bank Info file (outBankInfo) directory "C:\\Users\\attor\\OneDrive\\Documents\\bankinfo.txt"
+		String bankInfoWrapper = new String ("C:\\\\Users\\\\attor\\\\OneDrive\\\\Documents\\\\bankinfo.txt"); // Boxing
+		String bankFileName = bankInfoWrapper; // Unboxing
+		FileOutputStream outBankInfo = new FileOutputStream(bankFileName);
+		byte[] inEBytes = new byte[64];
+		int read;
+		while ((read = inEncrypt.read(inEBytes)) != -1) 
+		{
+			byte[] output = cipher.update(inEBytes, 0, read);
+			if (output != null)
+			{
+				outBankInfo.write(output);
+			}
+		}
+		byte[] outBankBytes = cipher.doFinal();
+		if (outBankBytes != null)
+		{
+			outBankInfo.write(outBankBytes);
+		}
+		inEncrypt.close();
+		outBankInfo.flush();
+		outBankInfo.close();
+		System.out.println("Decryption Complete");
+	}
+
+}
+
+
+
+
